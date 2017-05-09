@@ -20,10 +20,31 @@ export class CustomerComponent implements OnInit {
             // lastName: [{value:'n/a', disabled: true }],
             lastName: ['Holiday',[Validators.required, Validators.maxLength(50)]],
             email: ['',[Validators.required, Validators.pattern('[a-z0-9._%+-]+@[a-z0-9.-]+')]],
-            sendCatalog:[{value:true}]
+            sendCatalog:[{value:true}],
+            phone: [''],
+            notification: 'email',
         });
 
         
+    }
+
+    /* 
+       When accessing a "Control" (a control being any of the inputs we assign to a form group)
+       We have the ability to change the validation requirements on the fly. Below we are seeing if the user
+       has chosen to be notified by text or email. If the user chooses text then the phone control validation
+       is updated to make form control 'Phone' required. If the user then chooses email, then 'Phone'
+       is updated by clearing all the validators. "updateValueAndValidity" is a catch all to update the system - not 
+       too clear on that function, I think it may update the DOM, again not sure.. 
+    */
+    setNotification(notifyVia: string):void{
+        //accesing the phone input control
+        const phoneControl = this.customerForm.get('phone');
+        if(notifyVia === 'text'){
+            phoneControl.setValidators(Validators.required);
+        }else{
+            phoneControl.clearAsyncValidators();
+        }
+        phoneControl.updateValueAndValidity();
     }
     
     //this is a test button to show how you can populate the whole object model.
