@@ -11,6 +11,32 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var core_1 = require('@angular/core');
 var forms_1 = require('@angular/forms');
 var customer_1 = require('./customer');
+////////////////////////
+// CUSTOME VALIDATION //
+////////////////////////
+// CONFIGURABLE VALIDATION (Validation function takes parameters.)
+/* Note: Custome validation only takes one parameter so we returned an validator function wrapped in a function that takes more parameters
+   giving us the ability to configure the valdation. */
+function ratingRange(min, max) {
+    // The parameter passed to the returned functon is the form control. So in this function we have acces to the entire object.
+    return function (c) {
+        if (c.value !== undefined && (isNaN(c.value) || c.value < min || c.value > max)) {
+            return { 'range': true };
+        }
+        ;
+        return null;
+    };
+}
+// SINGLE EXAMPLE (Validation function doesn't take params)
+// function ratingRange(c: AbstractControl):{[key: string] :boolean} | null {
+//     if(c.value != undefined && (isNaN(c.value) || c.value < 1 || c.value > 5)){
+//         //return true if the validation fails.
+//         //We can access this "range" specifically like so - customerForm.get('rating').errors.range
+//         return{ 'range': true }
+//     };
+//     //return null if validation passes
+//     return null
+// } 
 var CustomerComponent = (function () {
     function CustomerComponent(fb) {
         this.fb = fb;
@@ -22,11 +48,12 @@ var CustomerComponent = (function () {
             // Each value property can take an array, the array takes two objects (1.)Is an object that has initial value and is if it disabled or not
             // (2.) This is an onject of custome or build in validation guards.
             // lastName: [{value:'n/a', disabled: true }],
-            lastName: ['Holiday', [forms_1.Validators.required, forms_1.Validators.maxLength(50)]],
+            lastName: ['', [forms_1.Validators.required, forms_1.Validators.minLength(2)]],
             email: ['', [forms_1.Validators.required, forms_1.Validators.pattern('[a-z0-9._%+-]+@[a-z0-9.-]+')]],
             sendCatalog: [{ value: true }],
-            phone: [''],
+            phone: '',
             notification: 'email',
+            rating: ['', ratingRange(1, 8)]
         });
     };
     /*
@@ -44,7 +71,9 @@ var CustomerComponent = (function () {
             phoneControl.setValidators(forms_1.Validators.required);
         }
         else {
+            console.log("You clicked email");
             phoneControl.clearAsyncValidators();
+            phoneControl.clearValidators();
         }
         phoneControl.updateValueAndValidity();
     };
