@@ -147,6 +147,12 @@ var CustomerComponent = (function () {
             this.emailMessage = Object.keys(c.errors)
                 .map(function (key) {
                 // select the 'require' message from the validationMessages
+                //Note: the map section is only here to handle mutiple error at once.
+                // it is going to take each key in the and return a string in its place. 
+                // after it loops through the entire array we will have an array or error messages
+                // the join takes all of those errors and puts it into one string to go in the message box. 
+                // this method may be hard because in the string joined it will be hard to tell where the
+                // first error starts and stops. 
                 return _this.validationMessages[key];
             })
                 .join(' ');

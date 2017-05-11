@@ -72,6 +72,8 @@
                                 placeholder="Email (required)" 
                                 formControlName = "email" />
                             <span class="help-block" *ngIf="emailMessage">
+                                <!--THIS COULD BE BETTER IF IT WAS AN OBJECT BEING LOOPED THROUGH TO BREAK
+                                UP THE MESSAGES INTO SPERATE LINES RATHER THAN ONE BIG STRING LIKE THIS EXAMPLE.-->
                                 {{ emailMessage }}
                             </span>
                         </div>
