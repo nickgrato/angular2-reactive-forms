@@ -14,12 +14,32 @@ var customer_1 = require('./customer');
 ////////////////////////
 // CUSTOME VALIDATION //
 ////////////////////////
+// Note: this is an example on how to compare two fields with in a sub form group.
+function emailMatcher(c) {
+    /* when passing in a formGroupto a validation function as apposed to just a control we have access
+    to all the controlls with in that formGroup so we don't neeed params in this case to conpair them.
+    The main diference is in this validation we are working with the form group, and in validaions below such as ratingRange
+    we are working with the form control */
+    console.log(c);
+    var emailControl = c.get('email');
+    var confirmControl = c.get('confirmEmail');
+    if (emailControl.pristine || confirmControl.pristine) {
+        return null;
+    }
+    if (emailControl.value === confirmControl.value) {
+        return null;
+    }
+    // This error object is added to the form group not the controls. 
+    // To solidify this look at the location of the custome validation, it is applied to the entire group below. 
+    return { 'match': true };
+}
 // CONFIGURABLE VALIDATION (Validation function takes parameters.)
 /* Note: Custome validation only takes one parameter so we returned an validator function wrapped in a function that takes more parameters
    giving us the ability to configure the valdation. */
 function ratingRange(min, max) {
     // The parameter passed to the returned functon is the form control. So in this function we have acces to the entire object.
     return function (c) {
+        console.log(c);
         if (c.value !== undefined && (isNaN(c.value) || c.value < min || c.value > max)) {
             return { 'range': true };
         }
@@ -41,20 +61,37 @@ var CustomerComponent = (function () {
     function CustomerComponent(fb) {
         this.fb = fb;
         this.customer = new customer_1.Customer();
+        this.validationMessages = {
+            // these validation messages could easily be populated with a backend server. 
+            require: 'please enter your email address',
+            pattern: 'please enter a valid email address'
+        };
     }
     CustomerComponent.prototype.ngOnInit = function () {
+        var _this = this;
         this.customerForm = this.fb.group({
             firstName: ['Brain', [forms_1.Validators.required, forms_1.Validators.minLength(2)]],
             // Each value property can take an array, the array takes two objects (1.)Is an object that has initial value and is if it disabled or not
             // (2.) This is an onject of custome or build in validation guards.
             // lastName: [{value:'n/a', disabled: true }],
             lastName: ['', [forms_1.Validators.required, forms_1.Validators.minLength(2)]],
-            email: ['', [forms_1.Validators.required, forms_1.Validators.pattern('[a-z0-9._%+-]+@[a-z0-9.-]+')]],
+            emailGroup: this.fb.group({
+                email: ['', [forms_1.Validators.required, forms_1.Validators.pattern('[a-z0-9._%+-]+@[a-z0-9.-]+')]],
+                confirmEmail: ['', forms_1.Validators.required],
+            }, { validator: emailMatcher }),
             sendCatalog: [{ value: true }],
             phone: '',
             notification: 'email',
             rating: ['', ratingRange(1, 8)]
         });
+        // To watch for a form control change. 
+        this.customerForm.get('notification').valueChanges
+            .subscribe(function (value) { return _this.setNotification(value); });
+        var emailControl = this.customerForm.get('emailGroup.email');
+        console.log('emailControl');
+        console.log(emailControl);
+        emailControl.valueChanges
+            .subscribe(function (value) { return _this.setMessage(emailControl); });
     };
     /*
        When accessing a "Control" (a control being any of the inputs we assign to a form group)
@@ -71,9 +108,8 @@ var CustomerComponent = (function () {
             phoneControl.setValidators(forms_1.Validators.required);
         }
         else {
-            console.log("You clicked email");
-            phoneControl.clearAsyncValidators();
-            phoneControl.clearValidators();
+            phoneControl.clearAsyncValidators(); // this one is to clear custome validators. 
+            phoneControl.clearValidators(); // this one is being used.
         }
         phoneControl.updateValueAndValidity();
     };
@@ -97,6 +133,24 @@ var CustomerComponent = (function () {
     CustomerComponent.prototype.save = function () {
         console.log(this.customerForm);
         console.log('Saved: ' + JSON.stringify(this.customerForm.value));
+    };
+    CustomerComponent.prototype.setMessage = function (c) {
+        var _this = this;
+        //clear left over messages. If is has one
+        this.emailMessage = '';
+        console.log(c);
+        //put loguc here for input status, if it is touched or has changes and has erros then ....
+        if ((c.touched || c.dirty) && c.errors) {
+            // console.log(Object.keys(c.errors));
+            //to return an array of the error validation collection keys
+            // Object.keys(c.errors) returns the key so in this case "pattern" or "require"
+            this.emailMessage = Object.keys(c.errors)
+                .map(function (key) {
+                // select the 'require' message from the validationMessages
+                return _this.validationMessages[key];
+            })
+                .join(' ');
+        }
     };
     CustomerComponent = __decorate([
         core_1.Component({

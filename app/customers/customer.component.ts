@@ -10,6 +10,29 @@ import { Customer } from './customer';
 // CUSTOME VALIDATION //
 ////////////////////////
 
+// Note: this is an example on how to compare two fields with in a sub form group.
+function emailMatcher(c: AbstractControl): {[key: string]: boolean} | null {
+    /* when passing in a formGroupto a validation function as apposed to just a control we have access
+    to all the controlls with in that formGroup so we don't neeed params in this case to conpair them. 
+    The main diference is in this validation we are working with the form group, and in validaions below such as ratingRange
+    we are working with the form control */
+    console.log(c);
+    let emailControl = c.get('email');
+    let confirmControl = c.get('confirmEmail');
+
+    if (emailControl.pristine || confirmControl.pristine) {
+      return null;
+    }
+
+    if (emailControl.value === confirmControl.value) {
+        return null;
+    }
+
+    // This error object is added to the form group not the controls. 
+    // To solidify this look at the location of the custome validation, it is applied to the entire group below. 
+    return { 'match': true };
+ }
+
 // CONFIGURABLE VALIDATION (Validation function takes parameters.)
 /* Note: Custome validation only takes one parameter so we returned an validator function wrapped in a function that takes more parameters 
    giving us the ability to configure the valdation. */
@@ -17,6 +40,7 @@ function ratingRange(min: number, max: number): ValidatorFn {
 
     // The parameter passed to the returned functon is the form control. So in this function we have acces to the entire object.
     return  (c: AbstractControl): {[key: string]: boolean} | null => {
+        console.log(c);
         if (c.value !== undefined && (isNaN(c.value) || c.value < min || c.value > max)) {
             return { 'range': true };
         };
@@ -39,9 +63,6 @@ function ratingRange(min: number, max: number): ValidatorFn {
 
 
 
-
-
-
 @Component({
     selector: 'my-signup',
     templateUrl: './app/customers/customer.component.html'
@@ -49,6 +70,13 @@ function ratingRange(min: number, max: number): ValidatorFn {
 export class CustomerComponent implements OnInit {
     customerForm: FormGroup;
     customer: Customer = new Customer();
+    emailMessage: string;
+
+    private validationMessages = {
+        // these validation messages could easily be populated with a backend server. 
+        require: 'please enter your email address',
+        pattern: 'please enter a valid email address'
+    }
 
     constructor(private fb: FormBuilder){}
 
@@ -60,15 +88,32 @@ export class CustomerComponent implements OnInit {
             // (2.) This is an onject of custome or build in validation guards.
             // lastName: [{value:'n/a', disabled: true }],
             lastName: ['',[Validators.required, Validators.minLength(2)]],
-            email: ['',[Validators.required, Validators.pattern('[a-z0-9._%+-]+@[a-z0-9.-]+')]],
+            emailGroup: this.fb.group({
+                email: ['',[Validators.required, Validators.pattern('[a-z0-9._%+-]+@[a-z0-9.-]+')]],
+                confirmEmail: ['', Validators.required],
+            },{ validator:emailMatcher}),
             sendCatalog:[{value:true}],
             phone: '',
             notification: 'email',
             rating: ['', ratingRange(1,8)]
+            // Note: look there is a slight syntax difference when applying a group validation and control validation - in the group you need to say { validator:nameOfValidator}
+            // and in the control you just put the name of the validator. No object. 
         });
 
+        // To watch for a form control change. 
+        this.customerForm.get('notification').valueChanges
+            .subscribe( value => this.setNotification(value));
+
+        const emailControl = this.customerForm.get('emailGroup.email');
+        console.log('emailControl');
+        
+        console.log(emailControl);
+        emailControl.valueChanges
+            .subscribe( value => this.setMessage(emailControl));
         
     }
+                                                                                                                                                                  
+    
 
     /* 
        When accessing a "Control" (a control being any of the inputs we assign to a form group)
@@ -84,9 +129,8 @@ export class CustomerComponent implements OnInit {
         if(notifyVia === 'text'){
             phoneControl.setValidators(Validators.required);
         }else{
-            console.log("You clicked email");
-            phoneControl.clearAsyncValidators();
-            phoneControl.clearValidators();
+            phoneControl.clearAsyncValidators();// this one is to clear custome validators. 
+            phoneControl.clearValidators();// this one is being used.
         }
         
         phoneControl.updateValueAndValidity();
@@ -116,6 +160,30 @@ export class CustomerComponent implements OnInit {
         console.log(this.customerForm);
         console.log('Saved: ' + JSON.stringify(this.customerForm.value));
     }
+
+    setMessage(c: AbstractControl): void {
+        //clear left over messages. If is has one
+        this.emailMessage = '';
+         console.log(c);
+        //put loguc here for input status, if it is touched or has changes and has erros then ....
+        if ((c.touched || c.dirty) && c.errors) {
+            // console.log(Object.keys(c.errors));
+            //to return an array of the error validation collection keys
+
+            // Object.keys(c.errors) returns the key so in this case "pattern" or "require"
+
+            this.emailMessage = Object.keys(c.errors)
+                //['require']
+                .map(key => 
+                // select the 'require' message from the validationMessages
+                this.validationMessages[key] )
+                // 'please enter your email address'
+                // the .join turns the array into a string for display. 
+                .join(' ');
+        }
+    }
+
+
  }
 
 
