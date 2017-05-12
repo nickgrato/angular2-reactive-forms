@@ -61,7 +61,7 @@ var CustomerComponent = (function () {
     function CustomerComponent(fb) {
         this.fb = fb;
         this.customer = new customer_1.Customer();
-        this.validationMessages = {
+        this.emailValidationMessages = {
             // these validation messages could easily be populated with a backend server. 
             required: 'please enter your email address',
             pattern: 'please enter a valid email address',
@@ -91,7 +91,7 @@ var CustomerComponent = (function () {
         var emailControl = this.customerForm.get('emailGroup.email');
         // This watcher uses the debounce methode to apply a wait time for any events to fire. 
         emailControl.valueChanges.debounceTime(2000)
-            .subscribe(function (value) { return _this.setMessage(emailControl); });
+            .subscribe(function (value) { return _this.emailMessage = _this.setMessage(emailControl, _this.emailValidationMessages); });
     }; // end on init
     /*
        When accessing a "Control" (a control being any of the inputs we assign to a form group)
@@ -137,21 +137,21 @@ var CustomerComponent = (function () {
     ///////////////////////
     // SET ERROR MESSAGE //
     ///////////////////////
-    CustomerComponent.prototype.setMessage = function (c) {
-        var _this = this;
+    CustomerComponent.prototype.setMessage = function (c, messages) {
         //clear left over messages. If is has one
         this.hasFieldError = false;
+        console.log(c);
         //put loguc here for input status, if it is touched or has changes and has erros then ....
         if ((c.touched || c.dirty) && c.errors) {
             this.hasFieldError = true;
             //to return an array of the error validation collection keys
             // Object.keys(c.errors) returns the key so in this case "pattern" or "require"
-            this.emailMessage = Object.keys(c.errors)
+            return Object.keys(c.errors)
                 .map(function (key) {
                 // select the 'require' message from the validationMessages
                 //Note: the map section is only here to handle mutiple error at once.
                 // it is going to take each key in the and return a string in its place. 
-                return _this.validationMessages[key];
+                return messages[key];
             });
         }
     };

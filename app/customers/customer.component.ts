@@ -77,7 +77,7 @@ export class CustomerComponent implements OnInit {
     emailMessage: any[];
     hasFieldError: boolean;
 
-    private validationMessages = {
+    private emailValidationMessages = {
         // these validation messages could easily be populated with a backend server. 
         required: 'please enter your email address',
         pattern: 'please enter a valid email address',
@@ -114,7 +114,14 @@ export class CustomerComponent implements OnInit {
 
         // This watcher uses the debounce methode to apply a wait time for any events to fire. 
         emailControl.valueChanges.debounceTime(2000)
-            .subscribe( value => this.setMessage(emailControl));
+            /* Here we are subscribing to the email input changes. Then we have a specific var that holds all the
+               error messages. We equal that to the return value of "setMessage", we pass the email input field "control"
+               it self to the method so we wan see what error it has in it's error object. we then swap that out with the
+               the corliating messages that we passed in as a second param "emailValidationMessages". So on each input field we watch
+               we need to pass setMesages the control itself and the validation messages that go with it. This keeps
+               setMessage agnostic to what field it calling it. 
+            */
+            .subscribe( value =>  this.emailMessage = this.setMessage(emailControl, this.emailValidationMessages));
 
 
 
@@ -175,9 +182,10 @@ export class CustomerComponent implements OnInit {
     // SET ERROR MESSAGE //
     ///////////////////////
 
-    setMessage(c: AbstractControl): void {
+    setMessage(c: AbstractControl, messages: any): any[] {
         //clear left over messages. If is has one
         this.hasFieldError = false;
+        console.log(c);
     
         //put loguc here for input status, if it is touched or has changes and has erros then ....
         if ((c.touched || c.dirty) && c.errors) {
@@ -186,7 +194,7 @@ export class CustomerComponent implements OnInit {
             //to return an array of the error validation collection keys
             // Object.keys(c.errors) returns the key so in this case "pattern" or "require"
 
-                 this.emailMessage = Object.keys(c.errors)
+                return Object.keys(c.errors)
                 //['require']
                 .map(key => 
                 // select the 'require' message from the validationMessages
@@ -194,7 +202,7 @@ export class CustomerComponent implements OnInit {
                 //Note: the map section is only here to handle mutiple error at once.
                 // it is going to take each key in the and return a string in its place. 
                 
-                this.validationMessages[key] )
+                messages[key] )
                 // ['please enter your email address']
         }
     }
