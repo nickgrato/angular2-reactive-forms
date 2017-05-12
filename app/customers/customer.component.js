@@ -10,6 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var core_1 = require('@angular/core');
 var forms_1 = require('@angular/forms');
+// DEBOUNCE 
+require('rxjs/add/operator/debounceTime');
 var customer_1 = require('./customer');
 ////////////////////////
 // CUSTOME VALIDATION //
@@ -20,7 +22,6 @@ function emailMatcher(c) {
     to all the controlls with in that formGroup so we don't neeed params in this case to conpair them.
     The main diference is in this validation we are working with the form group, and in validaions below such as ratingRange
     we are working with the form control */
-    console.log(c);
     var emailControl = c.get('email');
     var confirmControl = c.get('confirmEmail');
     if (emailControl.pristine || confirmControl.pristine) {
@@ -39,7 +40,6 @@ function emailMatcher(c) {
 function ratingRange(min, max) {
     // The parameter passed to the returned functon is the form control. So in this function we have acces to the entire object.
     return function (c) {
-        console.log(c);
         if (c.value !== undefined && (isNaN(c.value) || c.value < min || c.value > max)) {
             return { 'range': true };
         }
@@ -63,8 +63,9 @@ var CustomerComponent = (function () {
         this.customer = new customer_1.Customer();
         this.validationMessages = {
             // these validation messages could easily be populated with a backend server. 
-            require: 'please enter your email address',
-            pattern: 'please enter a valid email address'
+            required: 'please enter your email address',
+            pattern: 'please enter a valid email address',
+            minlength: 'I need more letters please'
         };
     }
     CustomerComponent.prototype.ngOnInit = function () {
@@ -76,7 +77,7 @@ var CustomerComponent = (function () {
             // lastName: [{value:'n/a', disabled: true }],
             lastName: ['', [forms_1.Validators.required, forms_1.Validators.minLength(2)]],
             emailGroup: this.fb.group({
-                email: ['', [forms_1.Validators.required, forms_1.Validators.pattern('[a-z0-9._%+-]+@[a-z0-9.-]+')]],
+                email: ['', [forms_1.Validators.required, forms_1.Validators.minLength(2), forms_1.Validators.pattern('[a-z0-9._%+-]+@[a-z0-9.-]+')]],
                 confirmEmail: ['', forms_1.Validators.required],
             }, { validator: emailMatcher }),
             sendCatalog: [{ value: true }],
@@ -88,11 +89,10 @@ var CustomerComponent = (function () {
         this.customerForm.get('notification').valueChanges
             .subscribe(function (value) { return _this.setNotification(value); });
         var emailControl = this.customerForm.get('emailGroup.email');
-        console.log('emailControl');
-        console.log(emailControl);
-        emailControl.valueChanges
+        // This watcher uses the debounce methode to apply a wait time for any events to fire. 
+        emailControl.valueChanges.debounceTime(2000)
             .subscribe(function (value) { return _this.setMessage(emailControl); });
-    };
+    }; // end on init
     /*
        When accessing a "Control" (a control being any of the inputs we assign to a form group)
        We have the ability to change the validation requirements on the fly. Below we are seeing if the user
@@ -134,14 +134,16 @@ var CustomerComponent = (function () {
         console.log(this.customerForm);
         console.log('Saved: ' + JSON.stringify(this.customerForm.value));
     };
+    ///////////////////////
+    // SET ERROR MESSAGE //
+    ///////////////////////
     CustomerComponent.prototype.setMessage = function (c) {
         var _this = this;
         //clear left over messages. If is has one
-        this.emailMessage = '';
-        console.log(c);
+        this.hasFieldError = false;
         //put loguc here for input status, if it is touched or has changes and has erros then ....
         if ((c.touched || c.dirty) && c.errors) {
-            // console.log(Object.keys(c.errors));
+            this.hasFieldError = true;
             //to return an array of the error validation collection keys
             // Object.keys(c.errors) returns the key so in this case "pattern" or "require"
             this.emailMessage = Object.keys(c.errors)
@@ -149,13 +151,8 @@ var CustomerComponent = (function () {
                 // select the 'require' message from the validationMessages
                 //Note: the map section is only here to handle mutiple error at once.
                 // it is going to take each key in the and return a string in its place. 
-                // after it loops through the entire array we will have an array or error messages
-                // the join takes all of those errors and puts it into one string to go in the message box. 
-                // this method may be hard because in the string joined it will be hard to tell where the
-                // first error starts and stops. 
                 return _this.validationMessages[key];
-            })
-                .join(' ');
+            });
         }
     };
     CustomerComponent = __decorate([
@@ -167,5 +164,5 @@ var CustomerComponent = (function () {
     ], CustomerComponent);
     return CustomerComponent;
 }());
-exports.CustomerComponent = CustomerComponent;
+exports.CustomerComponent = CustomerComponent; // END CONTROLER
 //# sourceMappingURL=customer.component.js.map

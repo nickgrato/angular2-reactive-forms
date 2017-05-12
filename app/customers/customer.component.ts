@@ -1,5 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl,  Validators, AbstractControl, ValidatorFn } from '@angular/forms';
+
+// DEBOUNCE 
+import 'rxjs/add/operator/debounceTime';
+
 import { Customer } from './customer';
 
 
@@ -16,7 +20,7 @@ function emailMatcher(c: AbstractControl): {[key: string]: boolean} | null {
     to all the controlls with in that formGroup so we don't neeed params in this case to conpair them. 
     The main diference is in this validation we are working with the form group, and in validaions below such as ratingRange
     we are working with the form control */
-    console.log(c);
+    
     let emailControl = c.get('email');
     let confirmControl = c.get('confirmEmail');
 
@@ -40,7 +44,7 @@ function ratingRange(min: number, max: number): ValidatorFn {
 
     // The parameter passed to the returned functon is the form control. So in this function we have acces to the entire object.
     return  (c: AbstractControl): {[key: string]: boolean} | null => {
-        console.log(c);
+       
         if (c.value !== undefined && (isNaN(c.value) || c.value < min || c.value > max)) {
             return { 'range': true };
         };
@@ -70,12 +74,14 @@ function ratingRange(min: number, max: number): ValidatorFn {
 export class CustomerComponent implements OnInit {
     customerForm: FormGroup;
     customer: Customer = new Customer();
-    emailMessage: string;
+    emailMessage: any[];
+    hasFieldError: boolean;
 
     private validationMessages = {
         // these validation messages could easily be populated with a backend server. 
-        require: 'please enter your email address',
-        pattern: 'please enter a valid email address'
+        required: 'please enter your email address',
+        pattern: 'please enter a valid email address',
+        minlength: 'I need more letters please'
     }
 
     constructor(private fb: FormBuilder){}
@@ -89,7 +95,7 @@ export class CustomerComponent implements OnInit {
             // lastName: [{value:'n/a', disabled: true }],
             lastName: ['',[Validators.required, Validators.minLength(2)]],
             emailGroup: this.fb.group({
-                email: ['',[Validators.required, Validators.pattern('[a-z0-9._%+-]+@[a-z0-9.-]+')]],
+                email: ['',[Validators.required, Validators.minLength(2), Validators.pattern('[a-z0-9._%+-]+@[a-z0-9.-]+')]],
                 confirmEmail: ['', Validators.required],
             },{ validator:emailMatcher}),
             sendCatalog:[{value:true}],
@@ -105,13 +111,15 @@ export class CustomerComponent implements OnInit {
             .subscribe( value => this.setNotification(value));
 
         const emailControl = this.customerForm.get('emailGroup.email');
-        console.log('emailControl');
-        
-        console.log(emailControl);
-        emailControl.valueChanges
+
+        // This watcher uses the debounce methode to apply a wait time for any events to fire. 
+        emailControl.valueChanges.debounceTime(2000)
             .subscribe( value => this.setMessage(emailControl));
+
+
+
         
-    }
+    }// end on init
                                                                                                                                                                   
     
 
@@ -161,36 +169,40 @@ export class CustomerComponent implements OnInit {
         console.log('Saved: ' + JSON.stringify(this.customerForm.value));
     }
 
+
+
+    ///////////////////////
+    // SET ERROR MESSAGE //
+    ///////////////////////
+
     setMessage(c: AbstractControl): void {
         //clear left over messages. If is has one
-        this.emailMessage = '';
-         console.log(c);
+        this.hasFieldError = false;
+    
         //put loguc here for input status, if it is touched or has changes and has erros then ....
         if ((c.touched || c.dirty) && c.errors) {
-            // console.log(Object.keys(c.errors));
+             this.hasFieldError = true;
+           
             //to return an array of the error validation collection keys
-
             // Object.keys(c.errors) returns the key so in this case "pattern" or "require"
 
-            this.emailMessage = Object.keys(c.errors)
+                 this.emailMessage = Object.keys(c.errors)
                 //['require']
                 .map(key => 
                 // select the 'require' message from the validationMessages
 
                 //Note: the map section is only here to handle mutiple error at once.
                 // it is going to take each key in the and return a string in its place. 
-                // after it loops through the entire array we will have an array or error messages
-                // the join takes all of those errors and puts it into one string to go in the message box. 
-                // this method may be hard because in the string joined it will be hard to tell where the
-                // first error starts and stops. 
+                
                 this.validationMessages[key] )
                 // ['please enter your email address']
-                // the .join turns the array into a string for display. 
-                .join(' ');
-                // returns 'please enter your email address'
         }
     }
 
- }
+
+
+
+
+ }// END CONTROLER
 
 
