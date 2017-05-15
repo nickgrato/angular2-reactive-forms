@@ -190,86 +190,100 @@
                 
 
                 <!--customerForm.controls.sendCatalog.value-->
-                <div *ngIf="customerForm.get('sendCatalog').value">
-                    <div formGroupName="addresses">
-                        <div class="form-group" >
-                            <label class="col-md-2 control-label">Address Type</label>
-                            <div class="col-md-8">
+            <div *ngIf="customerForm.get('sendCatalog').value">
+                <div class="form-group">
+                        <div class="col-md-4 col-md-offset-2">
+                            <span>
+                                <!--CLICK THIS BUTTON TO PUSH NEW FORM BULDER ARRAY TO ADDRESSES-->
+                                <button class="btn btn-primary"
+                                        type="button"
+		                                [disabled]="!addresses.valid"
+                                        (click)="addAddress()">
+                                    Add Another Address
+                                </button>
+                            </span>
+                        </div>
+                </div>
+            
+
+                <!-- in "addresses.controls" the ".constrols" are part of the FormArray -->
+               <div formArrayName="addresses" *ngFor="let address of addresses.controls; let i=index">
+                        <div [formGroupName]="i">
+                            <div class="form-group" >
+                                <label class="col-md-2 control-label"
+                                       attr.for="{{'addressType1Id' + i}}">Address Type</label>
+                                <div class="col-md-8">
                                     <label class="radio-inline">
-                                        <input type="radio" id="addressType1Id" value="home"
-                                            name="addressType" formControlName="addressType" >Home
+                                        <input type="radio" id="{{'addressType1Id' + i}}" value="home"
+                                        formControlName="addressType">Home
                                     </label>
                                     <label class="radio-inline">
-                                        <input type="radio" id="addressType1Id" value="work"
-                                            name="addressType" formControlName="addressType" >Work
+                                        <input type="radio" id="{{'addressType1Id' + i}}" value="work"
+                                        formControlName="addressType">Work
                                     </label>
                                     <label class="radio-inline">
-                                        <input type="radio" id="addressType1Id" value="other"
-                                            name="addressType" formControlName="addressType" >Other
+                                        <input type="radio" id="{{'addressType1Id' + i}}" value="other"
+                                        formControlName="addressType">Other
                                     </label>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="form-group">
-                            <label class="col-md-2 control-label" 
-                                for="street1Id">Street Address 1</label>
-                            <div class="col-md-8">
-                                <input type="text" 
-                                    class="form-control" 
-                                    id="street1Id" 
-                                    placeholder="Street address"
-                                    name="street1"
-                                    formControlName="street1">
+                            <div class="form-group">
+                                <label class="col-md-2 control-label"
+                                       attr.for="{{'street1Id' + i}}">Street Address 1</label>
+                                <div class="col-md-8">
+                                    <input type="text" 
+                                        class="form-control" 
+                                        id="{{'street1Id' + i}}" 
+                                        placeholder="Street address"
+                                        formControlName="street1">
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="form-group">
-                            <label class="col-md-2 control-label" 
-                                for="street2Id">Street Address 2</label>
-                            <div class="col-md-8">
-                                <input type="text" 
-                                    class="form-control" 
-                                    id="street2Id"
-                                    placeholder="Street address (second line)"
-                                    name="street2"
-                                    formControlName="street2">
+                            <div class="form-group">
+                                <label class="col-md-2 control-label" 
+                                       attr.for="{{'street2Id' + i}}">Street Address 2</label>
+                                <div class="col-md-8">
+                                    <input type="text" 
+                                        class="form-control" 
+                                        id="{{'street2Id' + i}}"
+                                        placeholder="Street address (second line)"
+                                        formControlName="street2">
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="form-group">
-                            <label class="col-md-2 control-label" 
-                                for="cityId">City, State, Zip Code</label>
-                            <div class="col-md-3">
-                                <input type="text" 
-                                    class="form-control" 
-                                    id="cityId" 
-                                    placeholder="City"
-                                    name="city"
-                                    formControlName="city">
-                            </div>
-                            <div class="col-md-3">
-                                <select class="form-control"
-                                        id="stateId"
-                                        name="state"
+                            <div class="form-group">
+                                <label class="col-md-2 control-label" 
+                                    attr.for="{{'cityId' + i}}">City, State, Zip Code</label>
+                                <div class="col-md-3">
+                                    <input type="text" 
+                                        class="form-control" 
+                                        id="{{'cityId' + i}}" 
+                                        placeholder="City"
                                         formControlName="city">
-                                    <option value="" disabled selected hidden>Select a State...</option>
-                                    <option value="AL">Alabama</option>
-                                    <option value="AK">Alaska</option>
-                                    <option value="AZ">Arizona</option>
-                                    <option value="AR">Arkansas</option>
-                                    <option value="CA">California</option>
-                                    <option value="CO">Colorado</option>
-                                    <option value="WI">Wisconsin</option>
-                                    <option value="WY">Wyoming</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                            <input type="number"
-                                    class="form-control" 
-                                    id="zipId" 
-                                    placeholder="Zip Code"
-                                    name="zip"
-                                    formControlName="zip">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-control"
+                                            id="{{'stateId' + i}}"
+                                            formControlName="state">
+                                        <option value="" disabled selected hidden>Select a State...</option>
+                                        <option value="AL">Alabama</option>
+                                        <option value="AK">Alaska</option>
+                                        <option value="AZ">Arizona</option>
+                                        <option value="AR">Arkansas</option>
+                                        <option value="CA">California</option>
+                                        <option value="CO">Colorado</option>
+                                        <option value="WI">Wisconsin</option>
+                                        <option value="WY">Wyoming</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                <input type="number"
+                                        class="form-control" 
+                                        id="{{'zipId' + i}}"
+                                        placeholder="Zip Code"
+                                        formControlName="zip">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -303,6 +317,9 @@
                         </span>
                     </div>
                 </div>
+           
+           
+           
             </fieldset>
         </form>
     </div>
@@ -311,3 +328,4 @@
 <br>Touched: {{customerForm.touched }}
 <br>Valid: {{ customerForm.valid }}
 <br>Value: {{customerForm.value | json }}
+<br>Addresses: {{customerForm.value.addresses | json}}

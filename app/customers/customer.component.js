@@ -68,6 +68,16 @@ var CustomerComponent = (function () {
             minlength: 'I need more letters please'
         };
     }
+    Object.defineProperty(CustomerComponent.prototype, "addresses", {
+        get: function () {
+            // Must cast this returned array because it will be an AbstractControl instead
+            // Type 'AbstractControl' is not assignable to type 'FormArray'.
+            // Property 'controls' is missing in type 'AbstractControl'.
+            return this.customerForm.get('addresses');
+        },
+        enumerable: true,
+        configurable: true
+    });
     CustomerComponent.prototype.ngOnInit = function () {
         ///////////////////////////////////////////////
         // Creating the Form Group and Form Controls //
@@ -89,14 +99,7 @@ var CustomerComponent = (function () {
             rating: ['', ratingRange(1, 8)],
             // Note: look there is a slight syntax difference when applying a group validation and control validation - in the group you need to say { validator:nameOfValidator}
             // and in the control you just put the name of the validator. No object. 
-            addresses: this.fb.group({
-                addressType: 'home',
-                street1: '',
-                street2: '',
-                city: '',
-                state: '',
-                zip: ''
-            })
+            addresses: this.fb.array([this.buildAddress()])
         });
         ///////////////////////////////////
         // Watching 'Notification' Value //
@@ -118,6 +121,22 @@ var CustomerComponent = (function () {
            setMessage agnostic to what field it calling it.
         */
     }; // end on init
+    /////////////////////
+    // ADD NEW ADDRESS //
+    /////////////////////
+    CustomerComponent.prototype.addAddress = function () {
+        this.addresses.push(this.buildAddress());
+    };
+    CustomerComponent.prototype.buildAddress = function () {
+        return this.fb.group({
+            addressType: 'home',
+            street1: '',
+            street2: '',
+            city: '',
+            state: '',
+            zip: ''
+        });
+    };
     ///////////////////////////////////////////////
     // Update Valdation Requirements for 'Phone' //
     ///////////////////////////////////////////////
