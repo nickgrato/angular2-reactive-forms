@@ -88,6 +88,11 @@ export class CustomerComponent implements OnInit {
 
     ngOnInit(){
         
+
+        ///////////////////////////////////////////////
+        // Creating the Form Group and Form Controls //
+        ///////////////////////////////////////////////
+        
         this.customerForm = this.fb.group({
             firstName: ['Brain',[Validators.required, Validators.minLength(2)]],
             // Each value property can take an array, the array takes two objects (1.)Is an object that has initial value and is if it disabled or not
@@ -101,19 +106,41 @@ export class CustomerComponent implements OnInit {
             sendCatalog:[{value:true}],
             phone: '',
             notification: 'email',
-            rating: ['', ratingRange(1,8)]
+            rating: ['', ratingRange(1,8)],
             // Note: look there is a slight syntax difference when applying a group validation and control validation - in the group you need to say { validator:nameOfValidator}
             // and in the control you just put the name of the validator. No object. 
+            addresses: this.fb.group({
+                addressType: 'home',
+                street1: '',
+                street2: '',
+                city: '',
+                state: '',
+                zip: ''
+            })
+            
         });
+ 
 
-        // To watch for a form control change. 
+
+        
+
+        ///////////////////////////////////
+        // Watching 'Notification' Value //
+        ///////////////////////////////////
         this.customerForm.get('notification').valueChanges
             .subscribe( value => this.setNotification(value));
 
-        const emailControl = this.customerForm.get('emailGroup.email');
 
+
+
+        ////////////////////////////
+        // Watching 'email' Value //
+        ////////////////////////////
+
+        const emailControl = this.customerForm.get('emailGroup.email');
         // This watcher uses the debounce methode to apply a wait time for any events to fire. 
         emailControl.valueChanges.debounceTime(2000)
+                    .subscribe( value =>  this.emailMessage = this.setMessage(emailControl, this.emailValidationMessages));
             /* Here we are subscribing to the email input changes. Then we have a specific var that holds all the
                error messages. We equal that to the return value of "setMessage", we pass the email input field "control"
                it self to the method so we wan see what error it has in it's error object. we then swap that out with the
@@ -121,14 +148,18 @@ export class CustomerComponent implements OnInit {
                we need to pass setMesages the control itself and the validation messages that go with it. This keeps
                setMessage agnostic to what field it calling it. 
             */
-            .subscribe( value =>  this.emailMessage = this.setMessage(emailControl, this.emailValidationMessages));
+           
 
 
 
-        
     }// end on init
                                                                                                                                                                   
     
+
+
+    ///////////////////////////////////////////////
+    // Update Valdation Requirements for 'Phone' //
+    ///////////////////////////////////////////////
 
     /* 
        When accessing a "Control" (a control being any of the inputs we assign to a form group)
@@ -152,6 +183,13 @@ export class CustomerComponent implements OnInit {
     }
     
 
+
+
+
+    ///////////////////
+    // Populate Form //
+    ///////////////////
+
     //this is a test button to show how you can populate the whole object model.
     populateTestData(): void{
         this.customerForm.setValue({
@@ -161,7 +199,6 @@ export class CustomerComponent implements OnInit {
             sendCatalog:false
         })
     }
-
     // this is an example to populate SOME of the data. If model object is complete use function above called "setValue()"
     populateSomeTestData(): void{
         this.customerForm.patchValue({
@@ -171,10 +208,19 @@ export class CustomerComponent implements OnInit {
         });
     }
 
+
+
+
+    /////////////////
+    // Submit Form //
+    /////////////////
+
     save() {
         console.log(this.customerForm);
         console.log('Saved: ' + JSON.stringify(this.customerForm.value));
     }
+
+
 
 
 

@@ -69,6 +69,9 @@ var CustomerComponent = (function () {
         };
     }
     CustomerComponent.prototype.ngOnInit = function () {
+        ///////////////////////////////////////////////
+        // Creating the Form Group and Form Controls //
+        ///////////////////////////////////////////////
         var _this = this;
         this.customerForm = this.fb.group({
             firstName: ['Brain', [forms_1.Validators.required, forms_1.Validators.minLength(2)]],
@@ -83,16 +86,41 @@ var CustomerComponent = (function () {
             sendCatalog: [{ value: true }],
             phone: '',
             notification: 'email',
-            rating: ['', ratingRange(1, 8)]
+            rating: ['', ratingRange(1, 8)],
+            // Note: look there is a slight syntax difference when applying a group validation and control validation - in the group you need to say { validator:nameOfValidator}
+            // and in the control you just put the name of the validator. No object. 
+            addresses: this.fb.group({
+                addressType: 'home',
+                street1: '',
+                street2: '',
+                city: '',
+                state: '',
+                zip: ''
+            })
         });
-        // To watch for a form control change. 
+        ///////////////////////////////////
+        // Watching 'Notification' Value //
+        ///////////////////////////////////
         this.customerForm.get('notification').valueChanges
             .subscribe(function (value) { return _this.setNotification(value); });
+        ////////////////////////////
+        // Watching 'email' Value //
+        ////////////////////////////
         var emailControl = this.customerForm.get('emailGroup.email');
         // This watcher uses the debounce methode to apply a wait time for any events to fire. 
         emailControl.valueChanges.debounceTime(2000)
             .subscribe(function (value) { return _this.emailMessage = _this.setMessage(emailControl, _this.emailValidationMessages); });
+        /* Here we are subscribing to the email input changes. Then we have a specific var that holds all the
+           error messages. We equal that to the return value of "setMessage", we pass the email input field "control"
+           it self to the method so we wan see what error it has in it's error object. we then swap that out with the
+           the corliating messages that we passed in as a second param "emailValidationMessages". So on each input field we watch
+           we need to pass setMesages the control itself and the validation messages that go with it. This keeps
+           setMessage agnostic to what field it calling it.
+        */
     }; // end on init
+    ///////////////////////////////////////////////
+    // Update Valdation Requirements for 'Phone' //
+    ///////////////////////////////////////////////
     /*
        When accessing a "Control" (a control being any of the inputs we assign to a form group)
        We have the ability to change the validation requirements on the fly. Below we are seeing if the user
@@ -113,6 +141,9 @@ var CustomerComponent = (function () {
         }
         phoneControl.updateValueAndValidity();
     };
+    ///////////////////
+    // Populate Form //
+    ///////////////////
     //this is a test button to show how you can populate the whole object model.
     CustomerComponent.prototype.populateTestData = function () {
         this.customerForm.setValue({
@@ -130,6 +161,9 @@ var CustomerComponent = (function () {
             sendCatalog: true
         });
     };
+    /////////////////
+    // Submit Form //
+    /////////////////
     CustomerComponent.prototype.save = function () {
         console.log(this.customerForm);
         console.log('Saved: ' + JSON.stringify(this.customerForm.value));
